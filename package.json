@@ -3,9 +3,8 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "type": "module",
   "scripts": {
-    "start": "mode index.js",
+    "start": "node index.js",
     "dev": "nodemon index.js"
   },
   "author": "",
