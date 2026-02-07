@@ -1,6 +1,11 @@
 import express from "express";
 import jwt from "jsonwebtoken";
+import bcrypt from "bcrypt";
 import mongoose from "mongoose";
+import { validationResult } from "express-validator";
+
+import { registerValidation } from "./validations/auth.js";
+import UserModel from "./models/User.js";
 
 mongoose
      .connect('mongodb+srv://admin:123@cluster0.rmgd20b.mongodb.net/?appName=Cluster0')
@@ -9,26 +14,30 @@ mongoose
 
 const app = express();
 
-app.use(express.json())
+app.use(express.json());
 
-app.get('/', (req, res) => {
-     res.send("Hello my app")
-})
+app.post('/auth/register', registerValidation, async (req, res) => {
+     const errors = validationResult(req);
 
-app.post('/auth/login', (req, res) => {
-     console.log(req.body)
+     if(!errors.isEmpty()) {
+          return res.status(400).json(errors.array())
+     }
 
-     const token = jwt.sign({
+     //генерируем шифрование пароля
+     const password = req.body.password;
+     const salt = await bcrypt.genSalt(10);
+     const passwordHash = await bcrypt.hash(password, salt)
+
+     const docUser = new UserModel({
           email: req.body.email,
-          fullName: 'Yuliya Sergeevna'
-     },
-          'secret123'
-     )
-
-     res.json({
-          success: true,
-          token
+          fullName: req.body.fullName,
+          avatarUrl: req.body.avatarUrl,
+          passwordHash,
      })
+
+     const user = await docUser.save()
+
+     res.json(user)
 })
 
 app.listen(444, (err) => {
@@ -37,4 +46,4 @@ app.listen(444, (err) => {
      }
 
      console.log("Server OK")
-})
+});
