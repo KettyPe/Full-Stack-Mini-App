@@ -16,6 +16,44 @@ const app = express();
 
 app.use(express.json());
 
+app.post('/auth/login', async (req, res) => {
+     try {
+          const user = await UserModel.findOne({ email: req.body.email })
+
+          if (!user) {
+               return res.status(404).json({
+                    //это сделано для себя
+                    message: 'User not found'
+               })
+          }
+
+          const isValidPass = await bcrypt.compare(req.body.password, user._doc.passwordHash)
+
+          if (!isValidPass) {
+               return res.status(404).json({
+                    message: 'Not correct login and password'
+               })
+          }
+
+          const token = jwt.sign({ _id: user._id }, 'secret123', { expiresIn: '30d' })
+
+          const { passwordHash, ...UserData } = user._doc
+
+          res.json({
+               ...UserData,
+               token
+          })
+
+     } catch (err) {
+          console.log(err);
+
+          res.status(500).json({
+               message: 'Ошибка авторизации'
+          })
+     }
+})
+
+
 app.post('/auth/register', registerValidation, async (req, res) => {
      try {
           const errors = validationResult(req);
@@ -38,7 +76,7 @@ app.post('/auth/register', registerValidation, async (req, res) => {
 
           const user = await docUser.save()
 
-          const token = jwt.sign({ _id: user._id }, 'secretkey123', { expiresIn: '30d' })
+          const token = jwt.sign({ _id: user._id }, 'secret123', { expiresIn: '30d' })
 
           const { passwordHash, ...UserData } = user._doc
 
@@ -46,13 +84,14 @@ app.post('/auth/register', registerValidation, async (req, res) => {
                ...UserData,
                token
           })
-     } catch (err) {
-     console.log(err);
 
-     res.status(500).json({
-          message: 'Ошибка регистрации'
-     })
-}
+     } catch (err) {
+          console.log(err);
+
+          res.status(500).json({
+               message: 'Ошибка регистрации'
+          })
+     }
 })
 
 app.listen(444, (err) => {
