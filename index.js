@@ -8,7 +8,7 @@ import { registerValidation } from "./validations/auth.js";
 import UserModel from "./models/User.js";
 
 mongoose
-     .connect('mongodb+srv://admin:123@cluster0.rmgd20b.mongodb.net/?appName=Cluster0')
+     .connect('mongodb+srv://admin:123@cluster0.rmgd20b.mongodb.net/blog?appName=Cluster0')
      .then(() => console.log('DataBase OK'))
      .catch((err) => console.log('DataBase Error', err))
 
@@ -17,27 +17,42 @@ const app = express();
 app.use(express.json());
 
 app.post('/auth/register', registerValidation, async (req, res) => {
-     const errors = validationResult(req);
+     try {
+          const errors = validationResult(req);
 
-     if(!errors.isEmpty()) {
-          return res.status(400).json(errors.array())
-     }
+          if (!errors.isEmpty()) {
+               return res.status(400).json(errors.array())
+          }
 
-     //генерируем шифрование пароля
-     const password = req.body.password;
-     const salt = await bcrypt.genSalt(10);
-     const passwordHash = await bcrypt.hash(password, salt)
+          //генерируем шифрование пароля
+          const password = req.body.password;
+          const salt = await bcrypt.genSalt(10);
+          const hash = await bcrypt.hash(password, salt)
 
-     const docUser = new UserModel({
-          email: req.body.email,
-          fullName: req.body.fullName,
-          avatarUrl: req.body.avatarUrl,
-          passwordHash,
+          const docUser = new UserModel({
+               email: req.body.email,
+               fullName: req.body.fullName,
+               avatarUrl: req.body.avatarUrl,
+               passwordHash: hash,
+          })
+
+          const user = await docUser.save()
+
+          const token = jwt.sign({ _id: user._id }, 'secretkey123', { expiresIn: '30d' })
+
+          const { passwordHash, ...UserData } = user._doc
+
+          res.json({
+               ...UserData,
+               token
+          })
+     } catch (err) {
+     console.log(err);
+
+     res.status(500).json({
+          message: 'Ошибка регистрации'
      })
-
-     const user = await docUser.save()
-
-     res.json(user)
+}
 })
 
 app.listen(444, (err) => {
