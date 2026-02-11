@@ -21,11 +21,11 @@ app.post('/auth/register', registerValidation, UserControllers.register)
 app.post('/auth/login', loginValidation, UserControllers.login)
 app.get('/auth/getmeinfo', checkAuth, UserControllers.getMe)
 
-// app.get('/posts', PostControllers.getAll)
-// app.get('/posts/:id', PostControllers.getOne)
-// app.delete('/posts/:id', PostControllers.remove)
-// app.patch('/posts/:id', PostControllers.update)
 app.post('/posts', checkAuth, postCreateValidation, PostControllers.create)
+app.get('/posts', PostControllers.getAll)
+app.get('/posts/:id', PostControllers.getOne)
+app.delete('/posts/:id', checkAuth, PostControllers.removePost)
+app.patch('/posts/:id', PostControllers.updatePost)
 
 app.listen(444, (err) => {
      if (err) {
