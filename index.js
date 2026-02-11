@@ -6,8 +6,9 @@ import { registerValidation } from "./validations/auth.js";
 import { loginValidation } from "./validations/login.js";
 import { postCreateValidation } from "./validations/post-create.js";
 import checkAuth from "./utils/checkAuth.js";
-import * as UserControllers from "./controllers/UserControllers.js"
-import * as PostControllers from "./controllers/PostControllers.js"
+import handleValidationErrors from "./utils/handleValidationErrors.js";
+import * as UserControllers from "./controllers/UserControllers.js";
+import * as PostControllers from "./controllers/PostControllers.js";
 
 mongoose
      .connect('mongodb+srv://admin:123@cluster0.rmgd20b.mongodb.net/blog?appName=Cluster0')
@@ -30,8 +31,8 @@ const upload = multer({ storage })
 app.use(express.json());
 app.use('/uploads', express.static('uploads'))
 
-app.post('/auth/register', registerValidation, UserControllers.register)
-app.post('/auth/login', loginValidation, UserControllers.login)
+app.post('/auth/register', registerValidation, handleValidationErrors, UserControllers.register)
+app.post('/auth/login', loginValidation, handleValidationErrors, UserControllers.login)
 app.get('/auth/getmeinfo', checkAuth, UserControllers.getMe)
 
 app.post('/upload', checkAuth, upload.single('image'), (req, res) => {
@@ -40,11 +41,11 @@ app.post('/upload', checkAuth, upload.single('image'), (req, res) => {
      })
 })
 
-app.post('/posts', checkAuth, postCreateValidation, PostControllers.create)
+app.post('/posts', checkAuth, postCreateValidation, handleValidationErrors, PostControllers.create)
 app.get('/posts', PostControllers.getAll)
 app.get('/posts/:id', PostControllers.getOne)
 app.delete('/posts/:id', checkAuth, PostControllers.removePost)
-app.patch('/posts/:id', postCreateValidation, PostControllers.updatePost)
+app.patch('/posts/:id', postCreateValidation, handleValidationErrors, PostControllers.updatePost)
 
 app.listen(444, (err) => {
      if (err) {
