@@ -3,8 +3,10 @@ import mongoose from "mongoose";
 
 import { registerValidation } from "./validations/auth.js";
 import { loginValidation } from "./validations/login.js";
+import { postCreateValidation } from "./validations/post-create.js";
 import checkAuth from "./utils/checkAuth.js";
-import { register, login, getMe } from "./controllers/UserControlles.js"
+import * as UserControllers from "./controllers/UserControllers.js"
+import * as PostControllers from "./controllers/PostControllers.js"
 
 mongoose
      .connect('mongodb+srv://admin:123@cluster0.rmgd20b.mongodb.net/blog?appName=Cluster0')
@@ -15,9 +17,15 @@ const app = express();
 
 app.use(express.json());
 
-app.post('/auth/register', registerValidation, register)
-app.post('/auth/login', loginValidation, login)
-app.get('/auth/me', checkAuth, getMe)
+app.post('/auth/register', registerValidation, UserControllers.register)
+app.post('/auth/login', loginValidation, UserControllers.login)
+app.get('/auth/getmeinfo', checkAuth, UserControllers.getMe)
+
+// app.get('/posts', PostControllers.getAll)
+// app.get('/posts/:id', PostControllers.getOne)
+// app.delete('/posts/:id', PostControllers.remove)
+// app.patch('/posts/:id', PostControllers.update)
+app.post('/posts', checkAuth, postCreateValidation, PostControllers.create)
 
 app.listen(444, (err) => {
      if (err) {
